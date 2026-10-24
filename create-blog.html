@@ -1,0 +1,141 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Create Blog - Blog Codomax</title>
+    <link rel="shortcut icon" href="assets/images/Logo.JPG" sizes="48x48">
+    <link rel="icon" href="assets/images/Logo.JPG" sizes="48x48">
+    <link rel="stylesheet" href="assets/css/style.css">
+</head>
+<body>
+    <nav class="navbar">
+        <div class="container">
+            <a href="index.html" class="logo">
+                <img src="assets/images/Logo.JPG" alt="Blog Codomax Logo" class="logo-img">
+                Blog Codomax
+            </a>
+            <button class="nav-toggle" id="navToggle">
+                <span></span>
+                <span></span>
+                <span></span>
+            </button>
+            <div class="nav-links" id="navLinks">
+                <a href="index.html">Home</a>
+                <a href="dashboard.html">Dashboard</a>
+                <a href="create-blog.html" class="active">Create Blog</a>
+            </div>
+            <div class="auth-btns hidden-mobile">
+                <span class="btn btn-outline" id="userName">Jane Smith</span>
+            </div>
+        </div>
+    </nav>
+
+    <main class="create-blog">
+        <div class="container">
+            <div class="create-header">
+                <h1>Create New Blog Post</h1>
+                <div class="dashboard-actions">
+                    <button class="btn btn-secondary" id="previewToggle">
+                        <svg viewBox="0 0 24 24" width="18" height="18">
+                            <path d="M12 4.5C7 4.5 2.73 7.46 1 12c1.74 4.54 6.03 7.5 11 7.5s9.27-2.96 11-7.5c-1.74-4.54-6.03-7.5-11-7.5zm0 13c-2.76 0-5-2.24-5-5s2.24-5 5-5 5 2.24 5 5-2.24 5-5 5z"/>
+                            <circle cx="12" cy="12" r="2"/>
+                        </svg>
+                        Hide Preview
+                    </button>
+                </div>
+            </div>
+
+            <form class="create-blog-form" id="createBlogForm">
+                <div class="form-row">
+                    <div class="form-group form-full">
+                        <label for="postTitle">Title <span class="required"></span></label>
+                        <input type="text" id="postTitle" name="title" placeholder="Write a compelling title..." required>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="postCategory">Category <span class="required"></span></label>
+                        <select id="postCategory" name="category" required>
+                            <option value="">Select a category</option>
+                            <option value="technology">Technology</option>
+                            <option value="design">Design</option>
+                            <option value="business">Business</option>
+                            <option value="travel">Travel</option>
+                            <option value="food">Food</option>
+                        </select>
+                    </div>
+
+                    <div class="form-group">
+                        <label for="postTags">Tags</label>
+                        <input type="text" id="postTags" name="tags" placeholder="comma, separated, tags">
+                    </div>
+
+                    <div class="form-group form-full">
+                        <label for="postThumbnail">Thumbnail URL</label>
+                        <input type="url" id="postThumbnail" name="thumbnail" placeholder="https://example.com/image.jpg">
+                    </div>
+
+                    <div class="form-group form-full">
+                        <label for="postContent">Content <span class="required"></span></label>
+                        <textarea id="postContent" name="content" placeholder="# Your Heading
+
+Write your blog post content here. Supports Markdown formatting." required></textarea>
+                    </div>
+
+                    <div class="form-group form-full">
+                        <label for="postExcerpt">Excerpt</label>
+                        <textarea id="postExcerpt" name="excerpt" placeholder="A short summary of your post (150-160 characters)..." rows="3"></textarea>
+                    </div>
+
+                    <div class="form-actions">
+                        <a href="dashboard.html" class="btn btn-secondary">
+                            <svg viewBox="0 0 24 24" width="18" height="18">
+                                <path d="M20 11H7.83l5.59-5.59L12 6l-6 6 6 6 1.41-1.41L7.83 13H20z"/>
+                            </svg>
+                            Cancel
+                        </a>
+                        <div style="display: flex; gap: 0.75rem;">
+                            <button type="button" class="btn btn-save" id="saveDraft">
+                                <svg viewBox="0 0 24 24" width="18" height="18">
+                                    <path d="M17 3H7c-1.1 0-2 .9-2 2v16c0 1.1.9 2 2 2h10c1.1 0 2-.9 2-2V5c0-1.1-.9-2-2-2zm0 16H7V5h10v14z"/>
+                                </svg>
+                                Save Draft
+                            </button>
+                            <button type="submit" class="btn btn-primary" id="publishPost">
+                                <svg viewBox="0 0 24 24" width="18" height="18">
+                                    <path d="M13 9l3 3-3 3V9z"/>
+                                    <path d="M6 9h12v2H6z"/>
+                                </svg>
+                                Publish Post
+                            </button>
+                        </div>
+                    </div>
+                </div>
+            </form>
+
+            <div class="blog-preview" id="previewSection">
+                <h3>
+                    <svg viewBox="0 0 24 24" width="20" height="20">
+                        <path d="M12 4.5C7 4.5 2.73 7.46 1 12c1.74 4.54 6.03 7.5 11 7.5s9.27-2.96 11-7.5c-1.74-4.54-6.03-7.5-11-7.5zm0 13c-2.76 0-5-2.24-5-5s2.24-5 5-5 5 2.24 5 5-2.24 5-5 5z"/>
+                        <circle cx="12" cy="12" r="2"/>
+                    </svg>
+                    Live Preview
+                </h3>
+                <div class="preview-content empty" id="previewContent">
+                    Start writing to see a live preview of your blog post.
+                </div>
+            </div>
+        </div>
+    </main>
+
+    <footer>
+        <div class="container">
+            <div class="footer-bottom">
+                <p>&copy; 2024 Blog Codomax. All rights reserved.</p>
+            </div>
+        </div>
+    </footer>
+
+    <script src="assets/js/app.js"></script>
+</body>
+</html>
