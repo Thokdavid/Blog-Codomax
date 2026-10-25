@@ -98,9 +98,30 @@ class BlogCodomax {
             return false;
         }
 
-        const userNameEl = document.getElementById('userName');
-        if (userNameEl && user) {
-            userNameEl.textContent = user.firstName + ' ' + user.lastName;
+        if (user) {
+            const userNameEl = document.getElementById('userName');
+            if (userNameEl) {
+                userNameEl.textContent = user.firstName + ' ' + user.lastName;
+            }
+
+            const userAvatarEl = document.getElementById('userAvatar');
+            if (userAvatarEl) {
+                userAvatarEl.textContent = user.firstName.charAt(0) + user.lastName.charAt(0);
+            }
+
+            const userFullNameEl = document.getElementById('userFullName');
+            if (userFullNameEl) {
+                userFullNameEl.textContent = user.firstName + ' ' + user.lastName;
+            }
+
+            const userJoinDateEl = document.getElementById('userJoinDate');
+            if (userJoinDateEl && user.createdAt) {
+                const monthNames = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+                const joinDate = new Date(user.createdAt);
+                const month = monthNames[joinDate.getMonth()];
+                const year = joinDate.getFullYear();
+                userJoinDateEl.textContent = 'Writer & Blogger • Joined ' + month + ' ' + year;
+            }
         }
 
         return true;

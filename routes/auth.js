@@ -1,7 +1,7 @@
 const express = require('express');
 const router = express.Router();
 
-const { createUser, authenticateUser, generateToken } = require('../models/User');
+const { createUser, authenticateUser, generateToken, updateUser, updatePassword } = require('../models/User');
 const { authenticateToken } = require('../middleware/auth');
 
 router.post('/register', async (req, res) => {
@@ -68,6 +68,37 @@ router.post('/login', async (req, res) => {
 
 router.get('/me', authenticateToken, (req, res) => {
     res.json({ user: req.user });
+});
+
+router.put('/me', authenticateToken, async (req, res) => {
+    try {
+        const { firstName, lastName, username, email } = req.body;
+        const updated = await updateUser(req.user.id, { firstName, lastName, username, email });
+        res.json({ message: 'Profile updated successfully', user: updated });
+    } catch (err) {
+        if (err.code === 'EMAIL_EXISTS' || err.code === 'USERNAME_EXISTS' || err.code === 'USER_NOT_FOUND') {
+            return res.status(400).json({ error: err.message });
+        }
+        console.error('Profile update error:', err);
+        res.status(500).json({ error: 'Server error' });
+    }
+});
+
+router.put('/me/password', authenticateToken, async (req, res) => {
+    try {
+        const { currentPassword, newPassword } = req.body;
+        if (!currentPassword || !newPassword) {
+            return res.status(400).json({ error: 'Current password and new password are required' });
+        }
+        await updatePassword(req.user.id, currentPassword, newPassword);
+        res.json({ message: 'Password updated successfully' });
+    } catch (err) {
+        if (err.code === 'INVALID_PASSWORD' || err.code === 'WEAK_PASSWORD' || err.code === 'USER_NOT_FOUND') {
+            return res.status(400).json({ error: err.message });
+        }
+        console.error('Password update error:', err);
+        res.status(500).json({ error: 'Server error' });
+    }
 });
 
 module.exports = router;
