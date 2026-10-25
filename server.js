@@ -22,9 +22,14 @@ app.use((req, res) => {
     res.status(404).json({ error: 'Route not found' });
 });
 
-const PORT = process.env.PORT || 5000;
-app.listen(PORT, () => {
-    console.log(`Server running on port ${PORT}`);
-    console.log(`Frontend: http://localhost:${PORT}`);
-    console.log(`API: http://localhost:${PORT}/api`);
-});
+// Conditional listen: only start server when run directly (not when imported)
+if (require.main === module) {
+    const PORT = process.env.PORT || 5000;
+    app.listen(PORT, () => {
+        console.log(`Server running on port ${PORT}`);
+        console.log(`Frontend: http://localhost:${PORT}`);
+        console.log(`API: http://localhost:${PORT}/api`);
+    });
+}
+
+module.exports = { app };
