@@ -1,86 +1,132 @@
 const crypto = require('crypto');
-const { readJSON, writeJSON } = require('../config/db');
-
-const BLOGS_FILE = 'blogs.json';
-
-function findBlogById(id) {
-    const blogs = readJSON(BLOGS_FILE);
-    return blogs.find(b => b.id === id);
-}
-
-function findBlogsByAuthor(authorId) {
-    const blogs = readJSON(BLOGS_FILE);
-    return blogs
-        .filter(b => b.author === authorId)
-        .sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
-}
-
-function getPublishedBlogs() {
-    const blogs = readJSON(BLOGS_FILE);
-    return blogs
-        .filter(b => b.status === 'published')
-        .sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
-}
+const { supabase, bucketName, toCamelCase, toSnakeCase } = require('../config/supabase');
 
 function parseTags(tags) {
     if (Array.isArray(tags)) {
-        return tags.map(t => t.trim()).filter(Boolean);
+        return tags.map(function (t) { return t.trim(); }).filter(Boolean);
     }
     if (typeof tags === 'string') {
-        return tags.split(',').map(t => t.trim()).filter(Boolean);
+        return tags.split(',').map(function (t) { return t.trim(); }).filter(Boolean);
     }
     return [];
 }
 
-function createBlog({ title, category, tags, thumbnail, content, excerpt, status, author, authorName }) {
-    const blogs = readJSON(BLOGS_FILE);
+async function findBlogById(id) {
+    const { data, error } = await supabase
+        .from('blogs')
+        .select('*')
+        .eq('id', id)
+        .single();
 
+    if (error) {
+        if (error.code === 'PGRST116') return null;
+        throw error;
+    }
+    return toCamelCase(data);
+}
+
+async function findBlogsByAuthor(authorId) {
+    const { data, error } = await supabase
+        .from('blogs')
+        .select('*')
+        .eq('author', authorId)
+        .order('created_at', { ascending: false });
+
+    if (error) throw error;
+    return (data || []).map(toCamelCase);
+}
+
+async function getPublishedBlogs() {
+    const { data, error } = await supabase
+        .from('blogs')
+        .select('*')
+        .eq('status', 'published')
+        .order('created_at', { ascending: false });
+
+    if (error) throw error;
+    return (data || []).map(toCamelCase);
+}
+
+async function createBlog(blogData) {
     const blog = {
-        id: crypto.randomUUID(),
-        title: title.trim(),
-        category,
-        tags: parseTags(tags),
-        thumbnail: thumbnail || '',
-        content: content.trim(),
-        excerpt: excerpt || '',
-        status: status || 'draft',
-        author,
-        authorName,
+        title: blogData.title.trim(),
+        category: blogData.category,
+        tags: parseTags(blogData.tags),
+        thumbnail: blogData.thumbnail || '',
+        content: blogData.content.trim(),
+        excerpt: blogData.excerpt || '',
+        status: blogData.status || 'draft',
+        author: blogData.author,
+        author_name: blogData.authorName,
         views: 0,
-        createdAt: new Date().toISOString(),
-        updatedAt: new Date().toISOString()
+        created_at: new Date().toISOString(),
+        updated_at: new Date().toISOString()
     };
 
-    blogs.push(blog);
-    writeJSON(BLOGS_FILE, blogs);
+    const snake = toSnakeCase(blog);
 
-    return blog;
+    const { data, error } = await supabase
+        .from('blogs')
+        .insert(snake)
+        .select()
+        .single();
+
+    if (error) throw error;
+    return toCamelCase(data);
 }
 
-function updateBlog(id, updates) {
-    const blogs = readJSON(BLOGS_FILE);
-    const index = blogs.findIndex(b => b.id === id);
-    if (index === -1) return null;
+async function updateBlog(id, updates) {
+    const snakeUpdates = toSnakeCase(updates);
+    delete snakeUpdates.id;
+    delete snakeUpdates.created_at;
+    snakeUpdates.updated_at = new Date().toISOString();
 
-    const updated = { ...blogs[index], ...updates, updatedAt: new Date().toISOString() };
-    blogs[index] = updated;
-    writeJSON(BLOGS_FILE, blogs);
+    const { data, error } = await supabase
+        .from('blogs')
+        .update(snakeUpdates)
+        .eq('id', id)
+        .select()
+        .single();
 
-    return updated;
+    if (error) throw error;
+    return toCamelCase(data);
 }
 
-function deleteBlog(id) {
-    const blogs = readJSON(BLOGS_FILE);
-    const index = blogs.findIndex(b => b.id === id);
-    if (index === -1) return false;
+async function deleteBlog(id) {
+    const { error } = await supabase
+        .from('blogs')
+        .delete()
+        .eq('id', id);
 
-    blogs.splice(index, 1);
-    writeJSON(BLOGS_FILE, blogs);
+    if (error) {
+        if (error.code === 'PGRST116') return false;
+        throw error;
+    }
     return true;
 }
 
-function toSafe(blog) {
-    return blog;
+async function uploadImage(buffer, filename, contentType) {
+    const ext = filename.split('.').pop();
+    const baseName = filename.split('.').slice(0, -1).join('.');
+    const storedName = baseName + '-' + Date.now() + '.' + ext;
+
+    const { data, error } = await supabase.storage
+        .from(bucketName)
+        .upload(storedName, buffer, {
+            contentType: contentType || 'image/jpeg',
+            upsert: false
+        });
+
+    if (error) throw error;
+
+    const { data: publicData } = supabase.storage
+        .from(bucketName)
+        .getPublicUrl(storedName);
+
+    return {
+        path: data.path,
+        url: publicData.publicUrl
+    };
 }
 
 module.exports = {
@@ -90,5 +136,6 @@ module.exports = {
     createBlog,
     updateBlog,
     deleteBlog,
-    toSafe
+    uploadImage,
+    parseTags
 };

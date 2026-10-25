@@ -1331,6 +1331,16 @@ footer .footer-bottom {
     grid-column: 1 / -1;
 }
 
+.create-blog-form .upload-row {
+    display: flex;
+    align-items: center;
+    gap: 0.5rem;
+}
+
+.create-blog-form .upload-row input[type="url"] {
+    flex: 1;
+}
+
 .create-blog-form .form-actions {
     display: flex;
     justify-content: space-between;

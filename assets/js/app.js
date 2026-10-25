@@ -44,6 +44,7 @@ class BlogCodomax {
         if (!this.initAuthState()) return;
         this.initDashboard();
         this.initBlogEditor();
+        this.initImageUpload();
         this.initSearch();
         this.initLogout();
         this.loadIndexPosts();
@@ -761,6 +762,80 @@ class BlogCodomax {
 
     redirectToDashboard() {
         window.location.href = 'dashboard.html';
+    }
+
+    /* ===== Image Upload ===== */
+    initImageUpload() {
+        const self = this;
+        const uploadBtn = document.getElementById('uploadImageBtn');
+        const fileInput = document.getElementById('imageUpload');
+        const thumbnailInput = document.getElementById('postThumbnail');
+        const previewContainer = document.getElementById('imagePreviewContainer');
+        const previewImg = document.getElementById('imagePreview');
+
+        if (!uploadBtn || !fileInput || !thumbnailInput) return;
+
+        uploadBtn.addEventListener('click', () => {
+            if (!auth.isAuthenticated()) {
+                self.showEditorNotification('Please log in to upload images.', 'error');
+                setTimeout(() => { window.location.href = 'login.html'; }, 1500);
+                return;
+            }
+            fileInput.click();
+        });
+
+        fileInput.addEventListener('change', (e) => {
+            const file = e.target.files[0];
+            if (!file) return;
+
+            if (!file.type.startsWith('image/')) {
+                self.showEditorNotification('Please select a valid image file.', 'error');
+                return;
+            }
+
+            if (file.size > 5 * 1024 * 1024) {
+                self.showEditorNotification('Image must be smaller than 5MB.', 'error');
+                return;
+            }
+
+            const reader = new FileReader();
+            reader.onload = function (event) {
+                const base64 = event.target.result.split(',')[1];
+
+                uploadBtn.disabled = true;
+                uploadBtn.innerHTML = 'Uploading...';
+
+                apiFetch('/blogs/upload-image', {
+                    method: 'POST',
+                    body: JSON.stringify({
+                        imageData: base64,
+                        filename: file.name,
+                        contentType: file.type
+                    })
+                })
+                    .then(function (result) {
+                        if (result.ok) {
+                            thumbnailInput.value = result.data.url;
+                            if (previewContainer && previewImg) {
+                                previewImg.src = result.data.url;
+                                previewContainer.style.display = 'block';
+                            }
+                        } else {
+                            self.showEditorNotification(
+                                result.data.error || 'Upload failed. Please try again.', 'error');
+                        }
+                    })
+                    .catch(function () {
+                        self.showEditorNotification(
+                            'Network error. Please make sure the server is running.', 'error');
+                    })
+                    .finally(function () {
+                        uploadBtn.disabled = false;
+                        uploadBtn.innerHTML = '<svg viewBox="0 0 24 24" width="16" height="16"><path d="M21 19V5c0-1.1-.9-2-2-2H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2zM8.5 13.5l2.5 3.01L14.5 12l4.5 6H5l3.5-4.5z"/></svg> Upload';
+                    });
+            };
+            reader.readAsDataURL(file);
+        });
     }
 
     /* ===== Index Page Blog Loading ===== */

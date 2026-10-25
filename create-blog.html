@@ -71,8 +71,18 @@
                     </div>
 
                     <div class="form-group form-full">
-                        <label for="postThumbnail">Thumbnail URL</label>
-                        <input type="url" id="postThumbnail" name="thumbnail" placeholder="https://example.com/image.jpg">
+                        <label for="postThumbnail">Thumbnail Image</label>
+                        <div class="upload-row">
+                            <input type="url" id="postThumbnail" name="thumbnail" placeholder="https://example.com/image.jpg">
+                            <input type="file" id="imageUpload" accept="image/*" style="display: none;">
+                            <button type="button" class="btn btn-outline" id="uploadImageBtn" style="margin-left: 0.5rem;">
+                                <svg viewBox="0 0 24 24" width="16" height="16"><path d="M21 19V5c0-1.1-.9-2-2-2H5c-1.1 0-2 .9-2 2v14c0 1.1.9 2 2 2h14c1.1 0 2-.9 2-2zM8.5 13.5l2.5 3.01L14.5 12l4.5 6H5l3.5-4.5z"/></svg>
+                                Upload
+                            </button>
+                        </div>
+                        <div id="imagePreviewContainer" style="margin-top: 0.75rem; display: none;">
+                            <img id="imagePreview" src="" alt="Thumbnail preview" style="max-width: 100%; max-height: 120px; border-radius: 8px; object-fit: cover;">
+                        </div>
                     </div>
 
                     <div class="form-group form-full">
