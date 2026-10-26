@@ -12,11 +12,10 @@ if (!supabaseKey || supabaseKey === 'your-service-role-key-here') {
     console.warn('WARNING: SUPABASE_SERVICE_ROLE_KEY is not configured. Update your .env file.');
 }
 
-const supabase = createClient(supabaseUrl, supabaseKey, {
-    realtime: {
-        ws: WebSocket
-    }
-});
+// Set global WebSocket for Node.js 18/20 compatibility on Render
+global.WebSocket = WebSocket;
+
+const supabase = createClient(supabaseUrl, supabaseKey);
 
 function toCamelCase(obj) {
     if (!obj) return obj;
