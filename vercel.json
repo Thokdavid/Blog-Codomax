@@ -2,10 +2,10 @@
   "version": 2,
   "buildCommand": "npm install",
   "outputDirectory": ".",
-  "framework": null,
+  "framework": "nodejs",
   "functions": {
     "api/index.js": {
-      "runtime": "now-node@18",
+      "runtime": "nodejs18.x",
       "maxDuration": 30
     }
   },
