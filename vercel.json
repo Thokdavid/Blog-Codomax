@@ -1,6 +1,5 @@
 {
   "version": 2,
-  "framework": "nodejs",
   "functions": {
     "api/index.js": {
       "runtime": "nodejs20.x",
