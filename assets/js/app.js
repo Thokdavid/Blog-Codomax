@@ -2,7 +2,7 @@
 
 const API_BASE = window.location.protocol === 'file:'
     ? 'http://localhost:5000/api'
-    : '/api';
+    : 'https://blog-codomax.onrender.com/api';
 
 const auth = {
     getToken() { return localStorage.getItem('blog_codomax_token'); },
