@@ -11,7 +11,22 @@ const auth = {
     getUser() { return JSON.parse(localStorage.getItem('blog_codomax_user') || 'null'); },
     setUser(user) { localStorage.setItem('blog_codomax_user', JSON.stringify(user)); },
     removeUser() { localStorage.removeItem('blog_codomax_user'); },
-    isAuthenticated() { return !!this.getToken(); },
+    isAuthenticated() {
+        const token = this.getToken();
+        if (!token) return false;
+        try {
+            const payload = JSON.parse(atob(token.split('.')[1].replace(/-/g, '+').replace(/_/g, '/')));
+            const exp = payload.exp;
+            if (exp && exp * 1000 < Date.now()) {
+                this.logout();
+                return false;
+            }
+        } catch (e) {
+            this.logout();
+            return false;
+        }
+        return true;
+    },
     logout() { this.removeToken(); this.removeUser(); },
     getAuthHeader() {
         const token = this.getToken();
@@ -25,6 +40,14 @@ async function apiFetch(url, options = {}) {
         ...options
     });
     const data = await response.json().catch(() => ({}));
+
+    if (response.status === 401 || response.status === 403) {
+        auth.logout();
+        if (!window.location.href.includes('login.html')) {
+            window.location.href = 'login.html';
+        }
+    }
+
     return { ok: response.ok, status: response.status, data };
 }
 
