@@ -1,5 +1,8 @@
 {
   "name": "blog-codomax-backend",
+  "engines": {
+    "node": "20.x"
+  },
   "version": "1.0.0",
   "description": "Backend API server for Blog Codomax - a modern blogging platform",
   "main": "server.js",
