@@ -511,9 +511,7 @@ class BlogCodomax {
 
         const { ok, status, data } = await apiFetch('/blogs/user');
 
-        if (tableBody) tableBody.innerHTML = '';
-
-        if (status === 401) {
+        if (status === 401 || status === 403) {
             auth.logout();
             window.location.href = 'login.html';
             return;
@@ -521,7 +519,11 @@ class BlogCodomax {
 
         if (!ok) {
             if (tableBody) {
-                tableBody.innerHTML = '<tr><td colspan="6" style="text-align:center;">Failed to load blogs. <a href="javascript:location.reload()">Retry</a></td></tr>';
+                let errorMsg = 'Failed to load blogs';
+                if (data && data.error) {
+                    errorMsg = data.error;
+                }
+                tableBody.innerHTML = '<tr><td colspan="6" style="text-align:center;">' + errorMsg + '. <a href="javascript:location.reload()">Retry</a></td></tr>';
             }
             return;
         }

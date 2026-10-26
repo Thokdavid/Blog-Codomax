@@ -17,8 +17,8 @@ router.get('/', async (req, res) => {
         const blogs = await getPublishedBlogs();
         res.json(blogs);
     } catch (err) {
-        console.error('Error fetching blogs:', err.message);
-        res.status(500).json({ error: 'Failed to fetch blogs' });
+        console.error('Error fetching blogs:', err);
+        res.status(500).json({ error: 'Failed to fetch blogs', details: err.message });
     }
 });
 
@@ -27,8 +27,8 @@ router.get('/user', authenticateToken, async (req, res) => {
         const blogs = await findBlogsByAuthor(req.user.id);
         res.json(blogs);
     } catch (err) {
-        console.error('Error fetching user blogs:', err.message);
-        res.status(500).json({ error: 'Failed to fetch blogs' });
+        console.error('Error fetching user blogs:', err);
+        res.status(500).json({ error: 'Failed to fetch blogs', details: err.message });
     }
 });
 
