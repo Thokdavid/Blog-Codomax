@@ -132,22 +132,23 @@ class BlogCodomax {
         const protectedPages = ['dashboard.html', 'create-blog.html'];
         if (!protectedPages.includes(currentPage)) return;
 
-        const authBtns = document.querySelector('.auth-btns');
-        if (!authBtns) return;
-        if (authBtns.querySelector('#logoutBtn')) return;
-
-        const logoutBtn = document.createElement('a');
-        logoutBtn.href = '#';
-        logoutBtn.className = 'btn btn-outline';
-        logoutBtn.id = 'logoutBtn';
+        let logoutBtn = document.querySelector('.auth-btns #logoutBtn');
+        if (!logoutBtn) {
+            logoutBtn = document.createElement('a');
+            logoutBtn.href = '#';
+            logoutBtn.className = 'btn btn-outline';
+            logoutBtn.id = 'logoutBtn';
+            logoutBtn.style.marginLeft = '0.5rem';
+        }
         logoutBtn.textContent = 'Logout';
-        logoutBtn.style.marginLeft = '0.5rem';
         logoutBtn.addEventListener('click', (e) => {
             e.preventDefault();
             auth.logout();
             window.location.href = 'login.html';
         });
-        authBtns.appendChild(logoutBtn);
+        if (!document.querySelector('.auth-btns #logoutBtn')) {
+            document.querySelector('.auth-btns').appendChild(logoutBtn);
+        }
     }
 
     /* ===== Search ===== */
