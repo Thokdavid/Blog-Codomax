@@ -1,4 +1,5 @@
 const { createClient } = require('@supabase/supabase-js');
+const WebSocket = require('ws');
 
 const supabaseUrl = process.env.SUPABASE_URL || 'https://your-project.supabase.co';
 const supabaseKey = process.env.SUPABASE_SERVICE_ROLE_KEY || 'your-service-role-key-here';
@@ -11,7 +12,11 @@ if (!supabaseKey || supabaseKey === 'your-service-role-key-here') {
     console.warn('WARNING: SUPABASE_SERVICE_ROLE_KEY is not configured. Update your .env file.');
 }
 
-const supabase = createClient(supabaseUrl, supabaseKey);
+const supabase = createClient(supabaseUrl, supabaseKey, {
+    realtime: {
+        ws: WebSocket
+    }
+});
 
 function toCamelCase(obj) {
     if (!obj) return obj;
