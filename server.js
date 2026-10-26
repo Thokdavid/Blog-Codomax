@@ -11,20 +11,11 @@ app.use(express.urlencoded({ extended: true }));
 
 app.use(express.static(path.join(__dirname), { dotfiles: 'deny' }));
 
-const { supabase } = require('./config/supabase');
-
 app.use('/api/auth', require('./routes/auth'));
 app.use('/api/blogs', require('./routes/blogs'));
 
-app.get('/api/health', async (req, res) => {
-    let dbStatus = 'unknown';
-    try {
-        const { error } = await supabase.from('blogs').select('id').limit(1);
-        dbStatus = error ? 'error: ' + error.message : 'connected';
-    } catch (e) {
-        dbStatus = 'error: ' + e.message;
-    }
-    res.json({ status: 'OK', timestamp: new Date().toISOString(), database: dbStatus });
+app.get('/api/health', (req, res) => {
+    res.json({ status: 'OK', timestamp: new Date().toISOString(), database: 'local-file' });
 });
 
 app.use((req, res) => {
