@@ -1,5 +1,7 @@
 const crypto = require('crypto');
-const { supabase, bucketName, toCamelCase, toSnakeCase } = require('../config/supabase');
+const { readJSON, writeJSON } = require('../config/db');
+
+const BLOGS_FILE = 'blogs.json';
 
 function parseTags(tags) {
     if (Array.isArray(tags)) {
@@ -11,44 +13,26 @@ function parseTags(tags) {
     return [];
 }
 
-async function findBlogById(id) {
-    const { data, error } = await supabase
-        .from('blogs')
-        .select('*')
-        .eq('id', id)
-        .single();
-
-    if (error) {
-        if (error.code === 'PGRST116') return null;
-        throw error;
-    }
-    return toCamelCase(data);
+function findBlogById(id) {
+    const blogs = readJSON(BLOGS_FILE);
+    return blogs.find(b => b.id === id) || null;
 }
 
-async function findBlogsByAuthor(authorId) {
-    const { data, error } = await supabase
-        .from('blogs')
-        .select('*')
-        .eq('author', authorId)
-        .order('created_at', { ascending: false });
-
-    if (error) throw error;
-    return (data || []).map(toCamelCase);
+function findBlogsByAuthor(authorId) {
+    const blogs = readJSON(BLOGS_FILE);
+    return blogs.filter(b => b.author === authorId);
 }
 
-async function getPublishedBlogs() {
-    const { data, error } = await supabase
-        .from('blogs')
-        .select('*')
-        .eq('status', 'published')
-        .order('created_at', { ascending: false });
-
-    if (error) throw error;
-    return (data || []).map(toCamelCase);
+function getPublishedBlogs() {
+    const blogs = readJSON(BLOGS_FILE);
+    return blogs.filter(b => b.status === 'published');
 }
 
 async function createBlog(blogData) {
+    const blogs = readJSON(BLOGS_FILE);
+
     const blog = {
+        id: crypto.randomUUID(),
         title: blogData.title.trim(),
         category: blogData.category,
         tags: parseTags(blogData.tags),
@@ -57,75 +41,68 @@ async function createBlog(blogData) {
         excerpt: blogData.excerpt || '',
         status: blogData.status || 'draft',
         author: blogData.author,
-        author_name: blogData.authorName,
+        authorName: blogData.authorName,
         views: 0,
-        created_at: new Date().toISOString(),
-        updated_at: new Date().toISOString()
+        createdAt: new Date().toISOString(),
+        updatedAt: new Date().toISOString()
     };
 
-    const snake = toSnakeCase(blog);
-
-    const { data, error } = await supabase
-        .from('blogs')
-        .insert(snake)
-        .select()
-        .single();
-
-    if (error) throw error;
-    return toCamelCase(data);
+    blogs.push(blog);
+    writeJSON(BLOGS_FILE, blogs);
+    return blog;
 }
 
 async function updateBlog(id, updates) {
-    const snakeUpdates = toSnakeCase(updates);
-    delete snakeUpdates.id;
-    delete snakeUpdates.created_at;
-    snakeUpdates.updated_at = new Date().toISOString();
+    const blogs = readJSON(BLOGS_FILE);
+    const index = blogs.findIndex(b => b.id === id);
+    if (index === -1) {
+        const err = new Error('Blog not found');
+        err.code = 'BLOG_NOT_FOUND';
+        throw err;
+    }
 
-    const { data, error } = await supabase
-        .from('blogs')
-        .update(snakeUpdates)
-        .eq('id', id)
-        .select()
-        .single();
+    const { title, category, tags, thumbnail, content, excerpt, status, views } = updates;
+    if (title !== undefined) blogs[index].title = title.trim();
+    if (category !== undefined) blogs[index].category = category;
+    if (tags !== undefined) blogs[index].tags = parseTags(tags);
+    if (thumbnail !== undefined) blogs[index].thumbnail = thumbnail;
+    if (content !== undefined) blogs[index].content = content.trim();
+    if (excerpt !== undefined) blogs[index].excerpt = excerpt;
+    if (status !== undefined) blogs[index].status = status;
+    if (views !== undefined) blogs[index].views = views;
+    blogs[index].updatedAt = new Date().toISOString();
 
-    if (error) throw error;
-    return toCamelCase(data);
+    writeJSON(BLOGS_FILE, blogs);
+    return blogs[index];
 }
 
 async function deleteBlog(id) {
-    const { error } = await supabase
-        .from('blogs')
-        .delete()
-        .eq('id', id);
-
-    if (error) {
-        if (error.code === 'PGRST116') return false;
-        throw error;
-    }
+    const blogs = readJSON(BLOGS_FILE);
+    const index = blogs.findIndex(b => b.id === id);
+    if (index === -1) return false;
+    blogs.splice(index, 1);
+    writeJSON(BLOGS_FILE, blogs);
     return true;
 }
 
 async function uploadImage(buffer, filename, contentType) {
-    const ext = filename.split('.').pop();
-    const baseName = filename.split('.').slice(0, -1).join('.');
+    // Store images locally in data/images directory
+    const fs = require('fs');
+    const path = require('path');
+    const dataDir = path.join(__dirname, '..', 'data', 'images');
+    if (!fs.existsSync(dataDir)) {
+        fs.mkdirSync(dataDir, { recursive: true });
+    }
+
+    const ext = filename.split('.').pop() || 'jpg';
+    const baseName = filename.split('.').slice(0, -1).join('.') || 'image';
     const storedName = baseName + '-' + Date.now() + '.' + ext;
+    const filepath = path.join(dataDir, storedName);
 
-    const { data, error } = await supabase.storage
-        .from(bucketName)
-        .upload(storedName, buffer, {
-            contentType: contentType || 'image/jpeg',
-            upsert: false
-        });
-
-    if (error) throw error;
-
-    const { data: publicData } = supabase.storage
-        .from(bucketName)
-        .getPublicUrl(storedName);
-
+    fs.writeFileSync(filepath, buffer);
     return {
-        path: data.path,
-        url: publicData.publicUrl
+        path: filepath,
+        url: '/data/images/' + storedName
     };
 }
 
